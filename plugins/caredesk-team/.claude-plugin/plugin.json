@@ -1,0 +1,6 @@
+{
+  "name": "caredesk-team",
+  "version": "1.0.0",
+  "description": "CareDesk team standards: FastAPI conventions skill, /new-endpoint scaffold, and a hook that blocks shell reads of secrets and PII.",
+  "author": { "name": "Deccansoft Training" }
+}

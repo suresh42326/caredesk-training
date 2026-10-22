@@ -11,7 +11,8 @@ class AppError(Exception):
         self.detail = detail
 
 
-async def app_error_handler(_: Request, exc: AppError) -> JSONResponse:
+async def app_error_handler(_: Request, exc: Exception) -> JSONResponse:
+    assert isinstance(exc, AppError)
     return JSONResponse(
         status_code=exc.status,
         media_type="application/problem+json",

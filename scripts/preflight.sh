@@ -18,5 +18,9 @@ if (cd backend && uv run --python 3.12 --group dev pytest -q >/dev/null 2>&1); t
 else
   echo "FAIL backend tests"; fail=1
 fi
+# Day 2: optional PostgreSQL reachability check (only when PGHOST is set in .env)
+if [ -f .env ] && grep -q "^PGHOST=" .env; then
+  if (cd backend && uv run python -c "from app.db import engine; engine.connect().close()" >/dev/null 2>&1); then echo "OK   PostgreSQL reachable"; else echo "FAIL PostgreSQL not reachable (check .env values and network/firewall)"; fail=1; fi
+fi
 if [ $fail -eq 0 ]; then echo "PREFLIGHT PASSED"; else echo "PREFLIGHT FAILED"; fi
 exit $fail

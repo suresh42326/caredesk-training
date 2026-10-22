@@ -9,19 +9,32 @@ from app.main import app
 
 
 @pytest.fixture()
-def client():
+def engine():
     engine = create_engine(
         "sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool
     )
     Base.metadata.create_all(engine)
+    return engine
+
+
+@pytest.fixture()
+def db(engine):
+    """A session for tests that call code directly (no HTTP)."""
+    session = sessionmaker(bind=engine, autoflush=False)()
+    yield session
+    session.close()
+
+
+@pytest.fixture()
+def client(engine):
     TestingSession = sessionmaker(bind=engine, autoflush=False)
 
     def override_get_db():
-        db = TestingSession()
+        session = TestingSession()
         try:
-            yield db
+            yield session
         finally:
-            db.close()
+            session.close()
 
     app.dependency_overrides[get_db] = override_get_db
     yield TestClient(app)

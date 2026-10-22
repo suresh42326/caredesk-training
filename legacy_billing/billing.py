@@ -1,83 +1,68 @@
-# -*- coding: utf-8 -*-
-# Legacy invoice calculator (Python 2.7).
-import config
-import rates
+"""Invoice calculator (migrated from Python 2.7).
 
-INVOICE_COUNTER = 0
-LAST_ERROR = None
+Behaviour is intentionally identical to the legacy code, including truncating integer
+division. The recorded legacy output in golden/invoices.json is the specification.
+"""
+from dataclasses import dataclass
+from typing import Any
 
-
-def next_invoice_no():
-    global INVOICE_COUNTER
-    INVOICE_COUNTER = INVOICE_COUNTER + 1
-    return "INV-%05d" % INVOICE_COUNTER
+from legacy_billing import config, rates
 
 
-def line_totals(items):
-    """Return list of (code, qty, line_cents, exempt_flag)."""
-    out = []
-    for item in items:
-        code = item['code']
-        qty = item['qty']
-        cents = rates.rate_for(code) * qty
-        out.append((code, qty, cents, rates.is_exempt(code)))
-    return out
+@dataclass(frozen=True)
+class Invoice:
+    invoice_no: str
+    visit_id: str
+    subtotal: int
+    discount: int
+    tax: int
+    total: int
+    patient_owes: int
+    avg_line: int
 
 
-def compute_invoice(visit):
-    global LAST_ERROR
-    try:
-        lines = line_totals(visit['items'])
-    except KeyError, e:
-        LAST_ERROR = unicode(e)
-        if config.DEBUG:
-            print "billing error: %s" % LAST_ERROR
-        return None
+class InvoiceCalculator:
+    """Holds the invoice counter that used to be a module-level global."""
 
-    subtotal = 0
-    exempt_subtotal = 0
-    for code, qty, cents, exempt in lines:
-        subtotal = subtotal + cents
-        if exempt:
-            exempt_subtotal = exempt_subtotal + cents
+    def __init__(self) -> None:
+        self._counter = 0
 
-    # Python 2 integer division: both operands are int, result truncates.
-    discount_pct = visit.get('discount_pct', 0)
-    discount = subtotal * discount_pct / 100
-    exempt_discount = exempt_subtotal * discount_pct / 100
+    def _next_invoice_no(self) -> str:
+        self._counter += 1
+        return f"INV-{self._counter:05d}"
 
-    taxable = (subtotal - discount) - (exempt_subtotal - exempt_discount)
-    tax = taxable * config.TAX_PERCENT / 100
-    total = subtotal - discount + tax
+    def compute(self, visit: dict[str, Any]) -> Invoice:
+        subtotal = 0
+        exempt_subtotal = 0
+        for item in visit["items"]:
+            cents = rates.rate_for(item["code"]) * item["qty"]
+            subtotal += cents
+            if rates.is_exempt(item["code"]):
+                exempt_subtotal += cents
 
-    owes = total
-    if visit.get('insured'):
-        owes = total * (100 - config.INSURANCE_COVERAGE_PERCENT) / 100
+        # `//` reproduces Python 2 `/` on non-negative ints (truncation).
+        pct = visit.get("discount_pct", 0)
+        discount = subtotal * pct // 100
+        exempt_discount = exempt_subtotal * pct // 100
 
-    # Average line value (integer division again).
-    avg_line = subtotal / len(lines)
+        taxable = (subtotal - discount) - (exempt_subtotal - exempt_discount)
+        tax = taxable * config.TAX_PERCENT // 100
+        total = subtotal - discount + tax
 
-    result = {
-        'invoice_no': next_invoice_no(),
-        'visit_id': visit['visit_id'],
-        'subtotal': subtotal,
-        'discount': discount,
-        'tax': tax,
-        'total': total,
-        'patient_owes': owes,
-        'avg_line': avg_line,
-    }
-    if config.DEBUG:
-        print "computed %s total=%d" % (result['invoice_no'], total)
-    return result
+        owes = total
+        if visit.get("insured"):
+            owes = total * (100 - config.INSURANCE_COVERAGE_PERCENT) // 100
 
+        return Invoice(
+            invoice_no=self._next_invoice_no(),
+            visit_id=visit["visit_id"],
+            subtotal=subtotal,
+            discount=discount,
+            tax=tax,
+            total=total,
+            patient_owes=owes,
+            avg_line=subtotal // len(visit["items"]),
+        )
 
-def compute_all(visits):
-    results = {}
-    for v in visits:
-        r = compute_invoice(v)
-        if r is not None:
-            results[v['visit_id']] = r
-    for vid, r in results.iteritems():
-        r['label'] = u"%s / %s" % (vid, r['invoice_no'])
-    return results
+    def compute_all(self, visits: list[dict[str, Any]]) -> dict[str, Invoice]:
+        return {v["visit_id"]: self.compute(v) for v in visits}

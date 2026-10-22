@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "clinic-rules": {
+      "command": "uv",
+      "args": ["run", "--python", "3.12", "--script", "mcp_servers/clinic_rules/server.py"],
+      "env": {
+        "MCP_PGHOST": "${MCP_PGHOST:-}",
+        "MCP_PGDATABASE": "${MCP_PGDATABASE:-}",
+        "MCP_PGUSER": "${MCP_PGUSER:-}",
+        "MCP_PGPASSWORD": "${MCP_PGPASSWORD:-}"
+      }
+    }
+  }
+}
