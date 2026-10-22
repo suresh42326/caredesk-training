@@ -1,7 +1,7 @@
 ---
 name: test-author
 description: Writes ACCEPTANCE tests first for ONE task from specs/<feature>/tasks.md, runs them and shows them fail for the right reason. Use after a task is approved and before any implementation, so a human can review the tests. Must not write or change production code, migrations, config, or any file outside the task's "Files in scope", and must not mock the database.
-tools: Read, Grep, Glob, Write, Edit, Bash(uv run pytest *)
+tools: Read, Grep, Glob, Write, Edit, Bash
 model: sonnet
 ---
 

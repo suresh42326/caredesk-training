@@ -1,7 +1,7 @@
 ---
 name: implementer
 description: Implements ONE approved task from specs/<feature>/tasks.md so the already human-reviewed tests pass, working only inside the task's "Files in scope" and keeping .agents/progress/<task>.md current. Use after test-author's tests are approved. Must not widen scope (stops and asks instead), weaken tests or lint, hand-write migrations, edit the tests it must satisfy, or commit, push, merge or deploy.
-tools: Read, Grep, Glob, Write, Edit, Bash(uv run pytest *), Bash(uv run ruff *), Bash(uv run alembic *), Bash(git diff *), Bash(git status *)
+tools: Read, Grep, Glob, Write, Edit, Bash
 model: sonnet
 ---
 

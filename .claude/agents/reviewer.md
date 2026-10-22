@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: Independent, READ-ONLY reviewer of one task's change against its spec and task block. Use after the implementer finishes, before a human approves. Checks spec fit, test quality, scope, safety and privacy, conventions and risk tier, and ends with a verdict (approve, approve with changes, block). Must not edit or write any file, run tests, or fix what it finds, and never approves on behalf of a human.
-tools: Read, Grep, Glob, Bash(git diff *), Bash(git log *), Bash(git status *)
+tools: Read, Grep, Glob, Bash
 model: sonnet
 ---
 
