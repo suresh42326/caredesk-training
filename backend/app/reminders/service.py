@@ -39,6 +39,7 @@ def send_due_reminders(
     due = (
         db.query(Appointment)
         .filter(Appointment.starts_at > now, Appointment.starts_at <= now + WINDOW)
+        .filter(Appointment.cancelled_at.is_(None))
         .order_by(Appointment.starts_at)
         .all()
     )
