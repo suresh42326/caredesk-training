@@ -51,6 +51,26 @@ def test_SPEC001_AC1_ignores_appointments_outside_the_24_hour_window(db):
     assert db.query(Reminder).count() == 0
 
 
+def test_SPEC001_AC1_includes_an_appointment_starting_exactly_24_hours_from_now(db):
+    make_appointment(db, starts_at=NOW + timedelta(hours=24))
+    make_contact(db)
+    provider = FakeSmsProvider()
+
+    assert run(db, provider) == RunSummary(sent=1)
+    assert len(provider.sent) == 1
+    assert db.query(Reminder).count() == 1
+
+
+def test_SPEC001_AC1_excludes_an_appointment_starting_exactly_now(db):
+    make_appointment(db, starts_at=NOW)
+    make_contact(db)
+    provider = FakeSmsProvider()
+
+    assert run(db, provider) == RunSummary()
+    assert provider.calls == 0
+    assert db.query(Reminder).count() == 0
+
+
 def test_SPEC001_AC2_does_not_text_an_opted_out_patient(db):
     make_appointment(db)
     make_contact(db, opted_out=True)
