@@ -18,6 +18,13 @@ class AppointmentOut(AppointmentCreate):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    cancelled_at: datetime | None = None
+    cancel_reason: str | None = None
+    cancelled_late: bool = False
+
+
+class CancelRequest(BaseModel):
+    reason: str = Field(min_length=3, max_length=200)
 
 
 class PatientContactIn(BaseModel):
