@@ -14,3 +14,8 @@ provisioned_credentials.csv
 aliases*.txt
 .claude/worktrees/
 .agents/scope.json
+.agents/audit.jsonl
+coverage/
+.coverage*
+*.sqlite
+otel.jsonl

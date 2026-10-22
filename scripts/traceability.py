@@ -16,10 +16,13 @@ feature = sys.argv[1] if len(sys.argv) > 1 else "sms-reminders"
 spec = (root / "specs" / feature / "spec.md").read_text(encoding="utf-8-sig")
 
 criteria = sorted(set(re.findall(r"SPEC\d+/AC-\d+", spec)), key=lambda s: [int(n) for n in re.findall(r"\d+", s)])
+spec_numbers = {re.match(r"SPEC(\d+)/", c).group(1) for c in criteria}
 tests: dict[str, list[str]] = defaultdict(list)
 for path in sorted((root / "backend" / "tests").glob("test_*.py")):
     for name in re.findall(r"^def (test_\w+)\(", path.read_text(encoding="utf-8-sig"), re.M):
         for spec_no, ac_no in re.findall(r"SPEC(\d+)_AC(\d+)", name):
+            if spec_no not in spec_numbers:
+                continue  # tests of other features are not orphans of this one
             tests[f"SPEC{spec_no}/AC-{ac_no}"].append(f"{path.name}::{name}")
 
 uncovered = [c for c in criteria if c not in tests]
