@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Integer, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, Integer, String, UniqueConstraint, false
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -14,6 +14,9 @@ class Appointment(Base):
     starts_at: Mapped[datetime] = mapped_column(DateTime)
     duration_min: Mapped[int] = mapped_column(Integer, default=30)
     reason: Mapped[str] = mapped_column(String(200))
+    cancelled_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    cancel_reason: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    cancelled_late: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false())
 
 
 class PatientContact(Base):
